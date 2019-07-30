@@ -119,3 +119,12 @@ func (db *DB) LongUrlFromHash(hash string) (string, error) {
 
 	return longUrl, nil
 }
+
+// TearDown will delete tables from db after integration tests
+func (db *DB) TearDown() error {
+	_, err := db.Exec("DROP TABLE urls")
+	if err != nil {
+		return err
+	}
+	return nil
+}

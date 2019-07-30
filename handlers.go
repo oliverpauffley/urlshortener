@@ -105,5 +105,9 @@ func (env *Env) RedirectHandler() http.HandlerFunc {
 			// redirect to url
 			http.Redirect(w, r, longUrl, http.StatusSeeOther)
 		}
+
+		// no other request methods so return an error
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 }

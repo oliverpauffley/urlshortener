@@ -51,9 +51,15 @@ func TestUrlHandler(t *testing.T) {
 			}{
 				LongUrl: test.inputUrl,
 			}
-			b, _ := json.Marshal(requestPayload)
+			b, err := json.Marshal(requestPayload)
+			if err != nil {
+				t.Fatalf("error encoding json, %v", err)
+			}
 
-			request, _ := http.NewRequest("POST", "/url", bytes.NewBuffer(b))
+			request, err := http.NewRequest("POST", "/url", bytes.NewBuffer(b))
+			if err != nil {
+				t.Fatalf("error creating new request, %v", err)
+			}
 			response := httptest.NewRecorder()
 
 			handler := http.HandlerFunc(env.urlHandler())
