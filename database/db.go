@@ -26,18 +26,40 @@ type DB struct {
 
 // initializes a new db
 func NewDB(dataSourceName string) (*DB, error) {
+	// open a db connection, will create a db with dataSource name if it doesn't exist.
 	db, err := sql.Open("sqlite3", dataSourceName)
+	if err != nil {
+		return nil, err
+	}
+	// add table to db if it doesn't exist
+	sqlStatement := "CREATE TABLE IF NOT EXISTS urls" +
+		"(id INTEGER not null primary key unique," +
+		"long_url TEXT    not null unique," +
+		"hash     TEXT)"
+	_, err = db.Exec(sqlStatement)
 	if err != nil {
 		return nil, err
 	}
 	return &DB{db}, nil
 }
 
+// NewUrl adds a url to db and generates a hash for the short url, uses transactions makes it safe for go routines
 func (db *DB) NewUrl(longUrl string) (string, error) {
-	sqlStatement := "INSERT INTO main.urls (long_url) VALUES ($1)"
-	row, err := db.Exec(sqlStatement, longUrl)
+	sqlStatement, err := db.Prepare("INSERT INTO main.urls (long_url) VALUES ($1)")
 	if err != nil {
 		return "", err
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return "", err
+	}
+	row, err := tx.Stmt(sqlStatement).Exec(longUrl)
+	if err != nil {
+		// error with adding to the db so rollback
+		_ = tx.Rollback()
+		return "", err
+	} else {
+		_ = tx.Commit()
 	}
 
 	// get id generated from SQLite
@@ -50,10 +72,23 @@ func (db *DB) NewUrl(longUrl string) (string, error) {
 	hash := hashing.NewHashId(int(id))
 
 	// add hashId into database
-	sqlStatement = "UPDATE main.urls set hash =$1 WHERE id = $2"
-	_, err = db.Exec(sqlStatement, hash, id)
+	sqlStatement, err = db.Prepare("UPDATE main.urls set hash =$1 WHERE id = $2")
 	if err != nil {
+		return "", nil
+	}
+
+	tx, err = db.Begin()
+	if err != nil {
+		return "", nil
+	}
+
+	_, err = tx.Stmt(sqlStatement).Exec(hash, id)
+	if err != nil {
+		// error writing to db so rollback
+		_ = tx.Rollback()
 		return "", err
+	} else {
+		_ = tx.Commit()
 	}
 
 	return hash, nil
