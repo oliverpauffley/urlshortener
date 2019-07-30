@@ -11,11 +11,12 @@ type (
 	Store interface {
 		NewUrl(longUrl string) (string, error)
 		HashFromLongUrl(longUrl string) (string, error)
+		LongUrlFromHash(hash string) (string, error)
 	}
 	UrlModel struct {
-		ID       int    `db:"id"`
-		LongUrl  string `db:"long_url"`
-		ShortUrl string `db:"short_url"`
+		ID      int    `db:"id"`
+		LongUrl string `db:"long_url"`
+		Hash    string `db:"short_url"`
 	}
 )
 
@@ -46,27 +47,40 @@ func (db *DB) NewUrl(longUrl string) (string, error) {
 	}
 
 	// generate hashid from integer id
-	hashId := hashing.NewHashId(int(id))
+	hash := hashing.NewHashId(int(id))
 
 	// add hashId into database
-	sqlStatement = "UPDATE main.urls set short_url =$1 WHERE id = $2"
-	_, err = db.Exec(sqlStatement, hashId, id)
+	sqlStatement = "UPDATE main.urls set hash =$1 WHERE id = $2"
+	_, err = db.Exec(sqlStatement, hash, id)
 	if err != nil {
 		return "", err
 	}
 
-	return hashId, nil
+	return hash, nil
 }
 
 func (db *DB) HashFromLongUrl(longUrl string) (string, error) {
-	sqlStatement := "SELECT short_url FROM main.urls WHERE long_url = $1"
+	sqlStatement := "SELECT hash FROM main.urls WHERE long_url = $1"
 	row := db.QueryRow(sqlStatement, longUrl)
-	var hashId string
+	var hash string
 
-	err := row.Scan(&hashId)
+	err := row.Scan(&hash)
 	if err != nil {
 		return "", err
 	}
 
-	return hashId, nil
+	return hash, nil
+}
+
+func (db *DB) LongUrlFromHash(hash string) (string, error) {
+	sqlStatement := "SELECT long_url FROM main.urls WHERE hash = $1"
+	row := db.QueryRow(sqlStatement, hash)
+	var longUrl string
+
+	err := row.Scan(&longUrl)
+	if err != nil {
+		return "", err
+	}
+
+	return longUrl, nil
 }

@@ -14,7 +14,7 @@ func TestUrlHandler(t *testing.T) {
 
 	// set up mockdb and env for testing
 	db := database.Mockdb{Urls: map[int]database.UrlModel{}}
-	db.Urls[1] = database.UrlModel{LongUrl: "http://bbc.com", ID: 1, ShortUrl: hashing.NewHashId(1)}
+	db.Urls[1] = database.UrlModel{LongUrl: "http://bbc.com", ID: 1, Hash: hashing.NewHashId(1)}
 	env := Env{db, http.NewServeMux()}
 
 	var tt = []struct {
@@ -78,6 +78,58 @@ func TestUrlHandler(t *testing.T) {
 				if gotJson.ShortUrl != test.wantUrl {
 					t.Errorf("server returned the incorrect shortened url, wanted %v, got %v",
 						test.wantUrl, gotJson.ShortUrl)
+				}
+			}
+		})
+	}
+}
+
+func TestRedirectHandler(t *testing.T) {
+	// set up mockdb and env for testing
+	db := database.Mockdb{Urls: map[int]database.UrlModel{}}
+	db.Urls[1] = database.UrlModel{LongUrl: "http://bbc.com", ID: 1, Hash: hashing.NewHashId(1)}
+	env := Env{db, http.NewServeMux()}
+
+	var tt = []struct {
+		name     string // name of test
+		inputUrl string // short url to redirect
+		wantCode int    // http status code expected
+		wantUrl  string // redirect url
+	}{
+		{
+			name:     "returns a redirect to a url when given a short url from the db",
+			inputUrl: db.Urls[1].Hash,
+			wantCode: http.StatusSeeOther,
+			wantUrl:  "http://bbc.com",
+		},
+		{
+			name:     "returns an error when trying to use a short url not in the db",
+			inputUrl: "this isn't in the db",
+			wantCode: http.StatusNotFound,
+			wantUrl:  "",
+		},
+	}
+
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+
+			request, _ := http.NewRequest("GET", "/"+test.inputUrl, nil)
+			response := httptest.NewRecorder()
+
+			handler := http.HandlerFunc(env.RedirectHandler())
+			handler.ServeHTTP(response, request)
+
+			gotCode := response.Code
+			if gotCode != test.wantCode {
+				t.Errorf("Got incorrect response code, wanted %v, got %v", test.wantCode, gotCode)
+			}
+
+			if test.wantUrl != "" {
+				redirectUrl := response.Header().Get("Location")
+
+				if redirectUrl != test.wantUrl {
+					t.Errorf("server returned the incorrect shortened url, wanted %v, got %v",
+						test.wantUrl, redirectUrl)
 				}
 			}
 		})

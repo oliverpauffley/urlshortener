@@ -78,3 +78,32 @@ func (env *Env) urlHandler() http.HandlerFunc {
 
 	}
 }
+
+func (env *Env) RedirectHandler() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// check for POST or GET request
+		if r.Method == "GET" {
+
+			// get short url parameter from request url
+			hashId := r.URL.Path[len("/"):]
+
+			// get long url from db
+			longUrl, err := env.db.LongUrlFromHash(hashId)
+			if err == sql.ErrNoRows {
+				log.Printf("No url exists, check the url entered, %v", err)
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			if err != nil {
+				log.Printf("error getting hash from database, %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			// redirect to url
+			http.Redirect(w, r, longUrl, http.StatusSeeOther)
+		}
+	}
+}
