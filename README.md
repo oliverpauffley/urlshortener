@@ -13,8 +13,8 @@ Json should be in the form:
 
 ```json
 {
- "long_url": "http://<your_url_here" 
- }
+ "long_url": "http://<your_url_here>" 
+}
 ```
 
 The web api will then redirect when you direct a browser to the given url.
