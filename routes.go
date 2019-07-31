@@ -1,7 +1,7 @@
-package main
+package urlshortener
 
-// define routes using DefaultServeMux
-func (env *Env) routes() {
-	env.router.HandleFunc("/url", env.urlHandler())
-	env.router.HandleFunc("/", env.RedirectHandler())
+// define routes for handlers
+func (env *Env) Routes() {
+	env.Router.HandleFunc("/url", env.urlHandler())
+	env.Router.HandleFunc("/", env.RedirectHandler())
 }

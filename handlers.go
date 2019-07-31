@@ -1,4 +1,4 @@
-package main
+package urlshortener
 
 import (
 	"database/sql"
@@ -40,10 +40,10 @@ func (env *Env) urlHandler() http.HandlerFunc {
 			}
 
 			// check if url is already in database
-			hashId, err := env.db.HashFromLongUrl(newRequest.LongUrl)
+			hashId, err := env.Db.HashFromLongUrl(newRequest.LongUrl)
 			if err == sql.ErrNoRows {
 				// url is not in db so add
-				hashId, err = env.db.NewUrl(newRequest.LongUrl)
+				hashId, err = env.Db.NewUrl(newRequest.LongUrl)
 			}
 			if err != nil {
 				log.Printf("error writing to database, %v", err)
@@ -90,7 +90,7 @@ func (env *Env) RedirectHandler() http.HandlerFunc {
 			hashId := r.URL.Path[len("/"):]
 
 			// get long url from db
-			longUrl, err := env.db.LongUrlFromHash(hashId)
+			longUrl, err := env.Db.LongUrlFromHash(hashId)
 			if err == sql.ErrNoRows {
 				log.Printf("No url exists, check the url entered, %v", err)
 				w.WriteHeader(http.StatusNotFound)
@@ -104,6 +104,7 @@ func (env *Env) RedirectHandler() http.HandlerFunc {
 
 			// redirect to url
 			http.Redirect(w, r, longUrl, http.StatusSeeOther)
+			return
 		}
 
 		// no other request methods so return an error

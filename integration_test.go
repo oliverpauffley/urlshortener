@@ -1,4 +1,4 @@
-package main
+package urlshortener
 
 import (
 	"bytes"
@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 		}
 		router := http.NewServeMux()
 		env = &Env{db, router}
-		env.routes()
+		env.Routes()
 
 		result := m.Run()
 
@@ -65,7 +65,7 @@ func TestIntegration(t *testing.T) {
 		}
 		response := httptest.NewRecorder()
 
-		env.router.ServeHTTP(response, req)
+		env.Router.ServeHTTP(response, req)
 
 		// check http response code is correct
 		gotCode := response.Code
@@ -95,7 +95,7 @@ func TestIntegration(t *testing.T) {
 		}
 		response = httptest.NewRecorder()
 
-		env.router.ServeHTTP(response, req)
+		env.Router.ServeHTTP(response, req)
 
 		// check for correct response code on redirect
 		gotCode = response.Code
