@@ -25,7 +25,7 @@ func TestUrlHandler(t *testing.T) {
 	}{
 		{
 			name:     "returns bad request when sent an invalid url",
-			inputUrl: "http://invalidurl.thisshouldntwork",
+			inputUrl: "http://",
 			wantCode: http.StatusBadRequest,
 			wantUrl:  "",
 		},
@@ -111,6 +111,12 @@ func TestRedirectHandler(t *testing.T) {
 		{
 			name:     "returns an error when trying to use a short url not in the db",
 			inputUrl: "this isn't in the db",
+			wantCode: http.StatusNotFound,
+			wantUrl:  "",
+		},
+		{
+			name:     "returns an error when no url hash is entered",
+			inputUrl: "",
 			wantCode: http.StatusNotFound,
 			wantUrl:  "",
 		},

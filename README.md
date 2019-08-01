@@ -28,7 +28,6 @@ Then run the program created.
 
 ### TODO:
 
-* Investigate a better method for checking url validity.
 * Better error handling. Could DRY in lots of areas. See: [Behaviour type assertion] 
 
 

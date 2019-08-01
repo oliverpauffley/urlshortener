@@ -14,11 +14,12 @@ func main() {
 	}
 	cli := &CLI{db, os.Stdin}
 
-	fmt.Println("Url Shortener \n" +
-		"To add a url to shorten type add: http:// \n" +
-		"To enter a short url type url: http:// \n" +
-		"or type `exit` to quit")
-	cli.ReadInput()
+	for {
+		fmt.Println("\nUrl Shortener \n" +
+			"To add a url to shorten type add: http:// \n" +
+			"To redirect, type a short url: http:// \n" +
+			"or type 'exit' to quit")
+		cli.ReadInput()
+	}
 
-	os.Exit(0)
 }

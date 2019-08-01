@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 func (env *Env) urlHandler() http.HandlerFunc {
@@ -15,12 +16,12 @@ func (env *Env) urlHandler() http.HandlerFunc {
 		ShortUrl string `json:"short_url"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		// check for POST or GET request
 
+		// check for POST or GET request
 		if r.Method == "POST" {
 			// decode json request
-			newRequest := &requestJson{}
-			err := json.NewDecoder(r.Body).Decode(newRequest)
+			newRequest := requestJson{}
+			err := json.NewDecoder(r.Body).Decode(&newRequest)
 			if err != nil {
 				log.Printf("error decoding json request, %v", err)
 				w.WriteHeader(http.StatusBadRequest)
@@ -28,13 +29,11 @@ func (env *Env) urlHandler() http.HandlerFunc {
 			}
 
 			// check url is valid
-			resp, err := http.Get(newRequest.LongUrl)
-			if err != nil {
-				log.Printf("error when checking user url input, %v", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			} else if resp.StatusCode != http.StatusOK {
-				log.Printf("problem with the url entered, check that the url to shorten is valid")
+			u, err := url.Parse(newRequest.LongUrl)
+			valid := err == nil && u.Scheme != "" && u.Host != ""
+
+			if !valid {
+				log.Printf("Url invalid, check the url is in the form http:// and is a working url")
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
