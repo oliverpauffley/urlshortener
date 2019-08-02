@@ -29,6 +29,7 @@ Then run the program created.
 ### TODO:
 
 * Better error handling. Could DRY in lots of areas. See: [Behaviour type assertion] 
+* System to remove old urls. Would be sensible to remove urls over a certain age (maybe check if they have been used recently?)
 
 
 [Behaviour type assertion]: https://medium.com/ki-labs-engineering/rest-api-error-handling-in-go-behavioral-type-assertion-509d93636afd
